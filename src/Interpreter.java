@@ -17,7 +17,8 @@ public class Interpreter {
         PHPParser parser = new PHPParser(tokens);
         ParseTree tree = parser.htmlDocument();
         System.setIn(originalInput);
-        MyVisitor<Object> loader = new MyVisitor<Object>();
+        MyVisitor<Object> loader = new MyVisitor<Object>("prueba.txt");
         loader.visit(tree);
+        loader.closeFile();
     }
 }
