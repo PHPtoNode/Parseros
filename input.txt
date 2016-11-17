@@ -1,0 +1,4 @@
+<?php
+	echo "prueba";
+	echo isset($_POST['prueba']);
+?>
