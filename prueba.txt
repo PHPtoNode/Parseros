@@ -1,5 +1,1 @@
-var i=0;
-console.log((3+4)/8*3+25.0);
-console.log(5+6+7+8);
-console.log("prueba prueba");
-console.log(i);
+console.log(null | (null ^ null));

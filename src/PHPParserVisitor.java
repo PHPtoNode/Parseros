@@ -310,12 +310,6 @@ public interface PHPParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExpressionStatement(PHPParser.ExpressionStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link PHPParser#assignmentStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAssignmentStatement(PHPParser.AssignmentStatementContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link PHPParser#unsetStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -586,6 +580,13 @@ public interface PHPParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPostfixIncDecExpression(PHPParser.PostfixIncDecExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AssignmentExpression}
+	 * labeled alternative in {@link PHPParser#notLeftRecursionExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssignmentExpression(PHPParser.AssignmentExpressionContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code PrintExpression}
 	 * labeled alternative in {@link PHPParser#notLeftRecursionExpression}.

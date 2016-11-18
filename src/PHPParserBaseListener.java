@@ -615,18 +615,6 @@ public class PHPParserBaseListener implements PHPParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAssignmentStatement(PHPParser.AssignmentStatementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAssignmentStatement(PHPParser.AssignmentStatementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterUnsetStatement(PHPParser.UnsetStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -1150,6 +1138,18 @@ public class PHPParserBaseListener implements PHPParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitPostfixIncDecExpression(PHPParser.PostfixIncDecExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAssignmentExpression(PHPParser.AssignmentExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAssignmentExpression(PHPParser.AssignmentExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
