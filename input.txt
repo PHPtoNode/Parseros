@@ -1,6 +1,4 @@
 <?php
-	echo "prueba";
-	echo isset($_POST['prueba']);
-	echo isset($_POST['prueba']);
-	echo isset($_POST['prueba']);
+    $i = 0;
+	echo (3+4)/8*3+25.0, 5+6+7+8, "prueba prueba", i;
 ?>

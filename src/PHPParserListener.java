@@ -507,6 +507,16 @@ public interface PHPParserListener extends ParseTreeListener {
 	 */
 	void exitExpressionStatement(PHPParser.ExpressionStatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link PHPParser#assignmentStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssignmentStatement(PHPParser.AssignmentStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PHPParser#assignmentStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssignmentStatement(PHPParser.AssignmentStatementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link PHPParser#unsetStatement}.
 	 * @param ctx the parse tree
 	 */
@@ -960,18 +970,6 @@ public interface PHPParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitPostfixIncDecExpression(PHPParser.PostfixIncDecExpressionContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code AssignmentExpression}
-	 * labeled alternative in {@link PHPParser#notLeftRecursionExpression}.
-	 * @param ctx the parse tree
-	 */
-	void enterAssignmentExpression(PHPParser.AssignmentExpressionContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code AssignmentExpression}
-	 * labeled alternative in {@link PHPParser#notLeftRecursionExpression}.
-	 * @param ctx the parse tree
-	 */
-	void exitAssignmentExpression(PHPParser.AssignmentExpressionContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code PrintExpression}
 	 * labeled alternative in {@link PHPParser#notLeftRecursionExpression}.

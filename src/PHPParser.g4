@@ -203,6 +203,7 @@ nonEmptyStatement
     | staticVariableStatement
     | echoStatement
     | expressionStatement
+	| assignmentStatement
     | unsetStatement
     | foreachStatement
     | tryCatchFinally
@@ -280,6 +281,11 @@ returnStatement
 expressionStatement
     : expression ';'
     ;
+
+assignmentStatement
+	: chain assignmentOperator expression 
+	| chain Eq '&' (chain | newExpr)
+	;
 
 unsetStatement
     : Unset '(' chainList ')' ';'
@@ -477,9 +483,6 @@ notLeftRecursionExpression
 
     | ('++' | '--') chain                                      #PrefixIncDecExpression
     | chain ('++' | '--')                                      #PostfixIncDecExpression
-
-    | chain assignmentOperator expression                      #AssignmentExpression
-    | chain Eq '&' (chain | newExpr)                           #AssignmentExpression
 
     | Print expression                                         #PrintExpression
 
