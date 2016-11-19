@@ -167,6 +167,44 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitForeachStatement(PHPParser.ForeachStatementContext ctx) {
+        String total = "for(var ";
+        String replace = "";
+        String value = "";
+        String array = "";
+
+        if( ctx.expression() != null ){
+            value = (String) visitChain(ctx.chain(0));
+            total += value;
+            array = (String) visitExpression(ctx.expression());
+            total += " in " + array + ")";
+            if(ctx.getText().contains("=>"))
+                replace = (String) visitChain(ctx.chain(1));
+        }else{
+            value = (String) visitChain(ctx.chain(1));
+            total += value;
+            array = (String) visitChain(ctx.chain(0)) ;
+            total += " in " + array + ")";
+            if(ctx.getText().contains("=>"))
+                replace = (String) visitChain(ctx.chain(2));
+        }
+        System.out.println("-");
+        System.out.println(replace+", "+array+"["+value+"]");
+        if( ctx.statement() != null ){
+            if( !replace.equals("") )
+                total += ((String) visitStatement(ctx.statement())).replace(replace, array+"["+value+"]" );
+            else
+                total += (String) visitStatement(ctx.statement());
+        }else if( ctx.innerStatementList() != null ){
+            if( !replace.equals("") )
+                total += ((String) visitInnerStatementList(ctx.innerStatementList())).replace(replace, array+"["+value+"]" );
+            else
+                total += (String) visitInnerStatementList(ctx.innerStatementList());
+        }
+        return (T)total;
+    }
+
+    @Override
     public T visitElseIfStatement(PHPParser.ElseIfStatementContext ctx) {
         String total = "", elseStr = "";
         String paren = (String) visitParenthesis(ctx.parenthesis());
@@ -357,25 +395,37 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitArrayCreationExpression(PHPParser.ArrayCreationExpressionContext ctx) {
-        System.out.println(ctx.getChild(0).getText());
-        if(ctx.getChild(0).getText().equals("[")){
-            visitArrayItemList(ctx.arrayItemList());
+        String items = (String) visitArrayItemList(ctx.arrayItemList());
+        if( ctx.getText().contains("=>") ){
+            return (T)("{" + items + "}");
         }
-        return null;
+        return (T)("[" + items + "]");
     }
 
     @Override
     public T visitArrayItemList(PHPParser.ArrayItemListContext ctx) {
-
+        String total = "";
         for(PHPParser.ArrayItemContext ct: ctx.arrayItem()){
-            String item = (String)visitArrayItem(ct);
+            total += (String) visitArrayItem(ct) + ", ";
         }
-        return super.visitArrayItemList(ctx);
+        if( total.length() > 0 )
+            total = total.substring(0, total.length()-2);
+        return (T) total;
+    }
+
+    @Override
+    public T visitArrayItem(PHPParser.ArrayItemContext ctx) {
+        if( ctx.getChildCount() > 1 ){
+            String left = (String) visitExpression(ctx.expression(0));
+            String right = (String) visitExpression(ctx.expression(1));
+            return (T) (left + ":" + right);
+        }
+        return super.visitArrayItem(ctx);
     }
 
     @Override
     public T visitConstantInititalizer(PHPParser.ConstantInititalizerContext ctx) {
-        System.out.println(ctx.getChild(0));
+        System.out.println(ctx.getChild(0).getText());
         return null;
     }
 

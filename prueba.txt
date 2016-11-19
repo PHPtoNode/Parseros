@@ -1,8 +1,18 @@
 var a = 0;
 var b = 0;
-var c = null;
+var c = array(11,2,3);
+var a = array();
 response.write(c[0]);
 a = undefined;
 b = undefined;
 delete c[0];
 
+for(var value in colors){
+	console.log(value + "\n");
+}
+for(var value in [1, 2, 3]){
+	console.log(value + "\n");
+}
+for(var key in a){
+	console.log(key + ' contains ' + a[key]);
+}
