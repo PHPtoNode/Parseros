@@ -106,6 +106,67 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitWhileStatement(PHPParser.WhileStatementContext ctx) {
+        String total = "while", inner = "";
+        String par = (String) visitParenthesis(ctx.parenthesis());
+        total += par;
+        if(ctx.statement() != null){
+            inner = (String) visitStatement(ctx.statement());
+        }else{
+            tabulations += "\t";
+            inner = ((String) visitInnerStatementList(ctx.innerStatementList()));
+            tabulations = tabulations.substring(0, tabulations.length()-1);
+            inner = "{\n"+inner+tabulations+"}";
+        }
+        total += inner;
+        return (T)total;
+    }
+
+    @Override
+    public T visitDoWhileStatement(PHPParser.DoWhileStatementContext ctx) {
+        String total = "do";
+        String par = (String) visitParenthesis(ctx.parenthesis());
+        String state = (String) visitStatement(ctx.statement());
+        total += state+"while"+par+";";
+        return (T)total;
+    }
+
+    @Override
+    public T visitForStatement(PHPParser.ForStatementContext ctx) {
+        String total = "for(";
+
+        if( ctx.forInit() != null ) {
+            ArrayList<String> forInit = (ArrayList<String>) visitForInit(ctx.forInit());
+            total += "var";
+            for (String init : forInit) {
+                total += init.replace("var", "") + ", ";
+            }
+            total = total.substring(0, total.length() - 2);
+        }
+        total += "; ";
+        if( ctx.expressionList() != null ) {
+            ArrayList<String> expList = (ArrayList<String>) visitExpressionList(ctx.expressionList());
+            for (String exp : expList) {
+                total += exp + ", ";
+            }
+            total = total.substring(0, total.length() - 2) ;
+        }
+        total += "; ";
+        if( ctx.forUpdate() != null ) {
+            ArrayList<String> forUpd = (ArrayList<String>) visitForUpdate(ctx.forUpdate());
+            for (String upd : forUpd) {
+                total += upd + ", ";
+            }
+            total = total.substring(0, total.length() - 2);
+        }
+
+        total += ")";
+        String state = (String) visitStatement(ctx.statement());
+        total += state;
+        return (T)total;
+    }
+
+    @Override
     public T visitElseIfStatement(PHPParser.ElseIfStatementContext ctx) {
         String total = "", elseStr = "";
         String paren = (String) visitParenthesis(ctx.parenthesis());
@@ -275,6 +336,12 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     public T visitPrefixIncDecExpression(PHPParser.PrefixIncDecExpressionContext ctx) {
         String chn = (String) visitChain(ctx.chain());
         return (T)( ctx.getChild(0)+chn );
+    }
+
+    @Override
+    public T visitPostfixIncDecExpression(PHPParser.PostfixIncDecExpressionContext ctx) {
+        String chn = (String) visitChain(ctx.chain());
+        return (T)( chn+ctx.getChild(1) );
     }
 
     @Override
