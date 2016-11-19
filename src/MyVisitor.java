@@ -201,6 +201,82 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitSwitchStatement(PHPParser.SwitchStatementContext ctx) {
+        String total = "switch";
+        total += (String) visitParenthesis(ctx.parenthesis());
+        total += "{\n";
+        tabulations += "\t";
+        for (PHPParser.SwitchBlockContext ct: ctx.switchBlock()) {
+            total += tabulations + (String) visitSwitchBlock(ct);
+        }
+        tabulations = tabulations.substring(0, tabulations.length()-1);
+        total += "}";
+        return (T)(total);
+    }
+
+    @Override
+    public T visitSwitchBlock(PHPParser.SwitchBlockContext ctx) {
+        String total = "";
+        if( ctx.expression().size() > 0 ){
+            total += "case ";
+            for (PHPParser.ExpressionContext ct : ctx.expression()) {
+                total += (String) visitExpression(ct);
+                total += ":\n";
+            }
+        }else{
+            total += "default ";
+            total += ":\n";
+        }
+        tabulations += "\t";
+        total += (String) visitInnerStatementList(ctx.innerStatementList());
+        tabulations = tabulations.substring(0, tabulations.length()-1);
+        return (T)(total);
+    }
+
+    @Override
+    public T visitBreakStatement(PHPParser.BreakStatementContext ctx) {
+        String total = "break";
+        if( ctx.expression() != null )
+            total += " " + (String) visitExpression(ctx.expression());
+        return (T) (total+";");
+    }
+
+    @Override
+    public T visitContinueStatement(PHPParser.ContinueStatementContext ctx) {
+        String total = "continue";
+        if( ctx.expression() != null )
+            total += " " + (String) visitExpression(ctx.expression());
+        return (T) (total+";");
+    }
+
+    @Override
+    public T visitReturnStatement(PHPParser.ReturnStatementContext ctx) {
+        String total = "return";
+        if( ctx.expression() != null )
+            total += " " + (String) visitExpression(ctx.expression());
+        return (T) (total+";");
+    }
+
+    @Override
+    public T visitGlobalStatement(PHPParser.GlobalStatementContext ctx) {
+        String total = "";
+        for(PHPParser.GlobalVarContext ct : ctx.globalVar() ) {
+            String var = (String) visitGlobalVar(ct);
+            total += var+" = null, ";
+        }
+        total = total.substring(0,total.length()-2 )+";";
+        return (T)(total);
+    }
+
+    @Override
+    public T visitGlobalVar(PHPParser.GlobalVarContext ctx) {
+        if( ctx.getChild(0).getClass().toString().equals("class org.antlr.v4.runtime.tree.TerminalNodeImpl") ) {
+            return (T)(ctx.getText().replace("$",""));
+        }
+        return null;
+    }
+
+    @Override
     public T visitEchoStatement(PHPParser.EchoStatementContext ctx) {
         ArrayList<String> values = (ArrayList<String>) visitExpressionList(ctx.expressionList());
         String total = "";
@@ -215,6 +291,29 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     public T visitExpressionStatement(PHPParser.ExpressionStatementContext ctx) {
         String val = (String) visitExpression(ctx.expression());
         return (T)(val+";");
+    }
+
+    @Override
+    public T visitUnsetStatement(PHPParser.UnsetStatementContext ctx) {
+        String total = "";
+        ArrayList<String> chns = (ArrayList<String>) visitChainList(ctx.chainList());
+        for( String chn: chns ){
+            if( chn.contains("[") ){
+                total += "delete "+chn+";\n";
+            }else{
+                total += chn+" = undefined;\n";
+            }
+        }
+        return (T)( total );
+    }
+
+    @Override
+    public T visitChainList(PHPParser.ChainListContext ctx) {
+        ArrayList<String> chns = new ArrayList<String>();
+        for(PHPParser.ChainContext ct: ctx.chain()) {
+            chns.add((String) visitChain(ct));
+        }
+        return (T)( chns );
     }
 
     @Override
@@ -254,6 +353,30 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             return (T)( "( "+val+" )" );
         }
         return visitYieldExpression(ctx.yieldExpression());
+    }
+
+    @Override
+    public T visitArrayCreationExpression(PHPParser.ArrayCreationExpressionContext ctx) {
+        System.out.println(ctx.getChild(0).getText());
+        if(ctx.getChild(0).getText().equals("[")){
+            visitArrayItemList(ctx.arrayItemList());
+        }
+        return null;
+    }
+
+    @Override
+    public T visitArrayItemList(PHPParser.ArrayItemListContext ctx) {
+
+        for(PHPParser.ArrayItemContext ct: ctx.arrayItem()){
+            String item = (String)visitArrayItem(ct);
+        }
+        return super.visitArrayItemList(ctx);
+    }
+
+    @Override
+    public T visitConstantInititalizer(PHPParser.ConstantInititalizerContext ctx) {
+        System.out.println(ctx.getChild(0));
+        return null;
     }
 
     @Override
@@ -333,6 +456,13 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     public T visitChain(PHPParser.ChainContext ctx) { return (T)( ctx.getText().replace("$","") ); }
 
     @Override
+    public T visitIndexerExpression(PHPParser.IndexerExpressionContext ctx) {
+        String name = (String) visitStringConstant(ctx.stringConstant());
+        String exp = (String) visitExpression(ctx.expression());
+        return (T)( name+"["+exp+"]" );
+    }
+
+    @Override
     public T visitPrefixIncDecExpression(PHPParser.PrefixIncDecExpressionContext ctx) {
         String chn = (String) visitChain(ctx.chain());
         return (T)( ctx.getChild(0)+chn );
@@ -342,6 +472,12 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     public T visitPostfixIncDecExpression(PHPParser.PostfixIncDecExpressionContext ctx) {
         String chn = (String) visitChain(ctx.chain());
         return (T)( chn+ctx.getChild(1) );
+    }
+
+    @Override
+    public T visitPrintExpression(PHPParser.PrintExpressionContext ctx) {
+        String value = (String) visitExpression(ctx.expression());
+        return (T)("console.log(" + value + ")");
     }
 
     @Override
