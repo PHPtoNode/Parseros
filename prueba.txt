@@ -26,13 +26,13 @@ function add(a, b){
 add(a,2);
 try{
 	try{
-		throw null
+		throw new Error("Hello")
 	}catch(e){
 		response.write(e.message + " catch in\n");
 		throw e
 	}finally{
 		response.write(e.message + " finally \n");
-		throw null
+		throw new Error("Bye")
 	}
 }catch(e){
 	response.write(e.message + " catch out\n");

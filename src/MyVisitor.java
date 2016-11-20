@@ -488,6 +488,70 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         return (T)(total);
     }
 
+    @Override
+    public T visitNewExpr(PHPParser.NewExprContext ctx) {
+        String total = "new ";
+        if( ctx.typeRef() != null )
+            total += (String) visitTypeRef(ctx.typeRef());
+        if( ctx.arguments() != null)
+            total += (String) visitArguments(ctx.arguments());
+        return (T)total;
+    }
+
+    @Override
+    public T visitTypeRef(PHPParser.TypeRefContext ctx) {
+
+        if( ctx.primitiveType() != null ){
+            return (T) ctx.primitiveType().getText();
+        }else if( ctx.qualifiedNamespaceName() != null ){
+            return (T) visitQualifiedNamespaceName(ctx.qualifiedNamespaceName());
+        }
+
+        return super.visitTypeRef(ctx);
+    }
+
+    @Override
+    public T visitQualifiedNamespaceName(PHPParser.QualifiedNamespaceNameContext ctx) {
+        String total = "";
+        if( ctx.Namespace() != null ){
+            //ToDo
+        }
+        if ( ctx.getText().contains("\\") ){
+            //ToDo
+        }
+        if( ctx.namespaceNameList() != null )
+            total += (String) visitNamespaceNameList(ctx.namespaceNameList());
+        return (T) total;
+    }
+
+    @Override
+    public T visitNamespaceNameList(PHPParser.NamespaceNameListContext ctx) {
+        String total = "";
+        for( PHPParser.IdentifierContext ct : ctx.identifier() )
+            total += (String) visitIdentifier(ct) + "\\\\";
+        total = total.substring(0, total.length() - 2);
+        return (T)total;
+    }
+
+    @Override
+    public T visitArguments(PHPParser.ArgumentsContext ctx) {
+        String total = "(";
+        for( PHPParser.ActualArgumentContext ct: ctx.actualArgument() ){
+            total += visitActualArgument(ct) + ", ";
+        }
+        total = total.substring(0, total.length() - 2);
+        total += ")";
+        return (T) total;
+    }
+
+    @Override
+    public T visitActualArgument(PHPParser.ActualArgumentContext ctx) {
+        if( ctx.getText().contains("...") )
+            return (T) ("..."+ visitExpression(ctx.expression()));
+        else if( ctx.chain() != null )
+            return (T) ("&"+ visitExpression(ctx.expression()));
+        return super.visitActualArgument(ctx);
+    }
 
     @Override
     public T visitVariableInitializer(PHPParser.VariableInitializerContext ctx) {
@@ -514,7 +578,12 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitIdentifier(PHPParser.IdentifierContext ctx) {
-        return super.visitIdentifier(ctx);
+        String id = ctx.getText();
+        if( id != null ) {
+            if (id.equals("Exception"))
+                id = "Error";
+        }
+        return (T) id;
     }
 
     @Override
