@@ -1,5 +1,6 @@
-import java.util.*;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
@@ -188,8 +189,6 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             if(ctx.getText().contains("=>"))
                 replace = (String) visitChain(ctx.chain(2));
         }
-        System.out.println("-");
-        System.out.println(replace+", "+array+"["+value+"]");
         if( ctx.statement() != null ){
             if( !replace.equals("") )
                 total += ((String) visitStatement(ctx.statement())).replace(replace, array+"["+value+"]" );
@@ -365,12 +364,15 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         String value = "";
         String valexp = (String) visitExpression(ctx.expression(0));
         String valandor = (String) visitAndOrExpression(ctx.andOrExpression());
+
         if( ctx.getChild(1).toString().equals("and") )
             value = valexp + " & " + valandor;
         if( ctx.getChild(1).toString().equals("or") )
             value = valexp + " | " + valandor;
         if( ctx.getChild(1).toString().equals("xor") )
             value = valexp + " ^ " + valandor;
+
+
         return (T) value;
     }
 
@@ -402,6 +404,8 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         return (T)("[" + items + "]");
     }
 
+
+
     @Override
     public T visitArrayItemList(PHPParser.ArrayItemListContext ctx) {
         String total = "";
@@ -414,6 +418,91 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitFunctionDeclaration(PHPParser.FunctionDeclarationContext ctx) {
+        String total = "";
+        if( ctx.attributes().getText().length() > 0 )
+            total += (String) visitAttributes(ctx.attributes()) + " ";
+        total += "function ";
+        total += (String) ctx.identifier().getText();
+        total += "(" + visitFormalParameterList(ctx.formalParameterList()) + ")";
+        if( ctx.blockStatement() != null )
+            total += (T) visitBlockStatement(ctx.blockStatement());
+        return (T) total;
+    }
+
+    @Override
+    public T visitFormalParameterList(PHPParser.FormalParameterListContext ctx) {
+        String total = "";
+        if( ctx.formalParameter().size() > 0 ){
+            for( PHPParser.FormalParameterContext ct : ctx.formalParameter() )
+                total += (String) visitFormalParameter(ct) + ", ";
+            total = total.substring(0, total.length()-2);
+        }
+        return (T) total;
+    }
+
+    @Override
+    public T visitTryCatchFinally(PHPParser.TryCatchFinallyContext ctx) {
+        String total = "";
+        total = "try";
+        if( ctx.blockStatement() != null )
+            total += (String) visitBlockStatement(ctx.blockStatement());
+        if( ctx.catchClause().size() > 0 ){
+            for(PHPParser.CatchClauseContext ct: ctx.catchClause() ){
+                total += (String) visitCatchClause(ct);
+            }
+        }
+        if( ctx.finallyStatement() != null ) {
+            total += (String) visitFinallyStatement(ctx.finallyStatement());
+        }
+        return (T) total;
+    }
+
+    @Override
+    public T visitCatchClause(PHPParser.CatchClauseContext ctx) {
+        String total = "catch(";
+        total += ctx.VarName().getText().replace("$","") + ")";
+        if( ctx.blockStatement() != null )
+            total += ((String) visitBlockStatement(ctx.blockStatement())).replace("->",".");
+        total = total.replace("getMessage()", "message");
+        total = total.replace("getTrace()", "stack");
+        total = total.replace("getTraceAsString()", "stack");
+        return (T) total;
+    }
+
+    @Override
+    public T visitFinallyStatement(PHPParser.FinallyStatementContext ctx) {
+        String total = "finally";
+        if( ctx.blockStatement() != null )
+            total += ((String) visitBlockStatement(ctx.blockStatement())).replace("->",".");
+        total = total.replace("getMessage()", "message");
+        total = total.replace("getTrace()", "stack");
+        total = total.replace("getTraceAsString()", "stack");
+        return (T) total;
+    }
+
+    @Override
+    public T visitThrowStatement(PHPParser.ThrowStatementContext ctx) {
+        String total = "throw ";
+        total += visitExpression(ctx.expression());
+        return (T)(total);
+    }
+
+
+    @Override
+    public T visitVariableInitializer(PHPParser.VariableInitializerContext ctx) {
+        String total = "";
+        total = ctx.VarName().getText().replace("$","");
+        if( ctx.constantInititalizer() != null ) {
+            total += ctx.Eq().getText() + " " + " " + ctx.constantInititalizer().getText();
+        }
+        return (T) total;
+    }
+
+
+
+
+    @Override
     public T visitArrayItem(PHPParser.ArrayItemContext ctx) {
         if( ctx.getChildCount() > 1 ){
             String left = (String) visitExpression(ctx.expression(0));
@@ -424,9 +513,8 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
-    public T visitConstantInititalizer(PHPParser.ConstantInititalizerContext ctx) {
-        System.out.println(ctx.getChild(0).getText());
-        return null;
+    public T visitIdentifier(PHPParser.IdentifierContext ctx) {
+        return super.visitIdentifier(ctx);
     }
 
     @Override

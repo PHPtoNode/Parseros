@@ -8,11 +8,33 @@ unset($a, $b, $c[0]);
 foreach ($colors as $value) {
     print $value."\n";
 }
-foreach ([1,2,3] as $value) {
+foreach (array(1,2,3) as $value) {
     print $value."\n";
 }
 foreach ($a as $key => $value) {
     print $key.' contains '.$value;
 
+}
+$a = ray();
+$a[0] = 'red';
+$a[1] = 'green';
+$a[2] = 'blue';
+function add($a, $b) {
+    return $a + $b;
+}
+add($a,2);
+
+try{
+        try {
+                throw new Exception("Hello");
+        } catch(Exception $e) {
+                echo $e->getMessage()." catch in\n";
+                throw $e;
+        } finally {
+                echo $e->getMessage()." finally \n";
+                throw new Exception("Bye");
+        }
+} catch (Exception $e) {
+        echo $e->getMessage()." catch out\n";
 }
 ?>

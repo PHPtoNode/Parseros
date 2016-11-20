@@ -10,9 +10,30 @@ delete c[0];
 for(var value in colors){
 	console.log(value + "\n");
 }
-for(var value in [1, 2, 3]){
+for(var value in array(1,2,3)){
 	console.log(value + "\n");
 }
 for(var key in a){
 	console.log(key + ' contains ' + a[key]);
+}
+var a = ray();
+var a[0] = 'red';
+var a[1] = 'green';
+var a[2] = 'blue';
+function add(a, b){
+	return a + b;
+}
+add(a,2);
+try{
+	try{
+		throw null
+	}catch(e){
+		response.write(e.message + " catch in\n");
+		throw e
+	}finally{
+		response.write(e.message + " finally \n");
+		throw null
+	}
+}catch(e){
+	response.write(e.message + " catch out\n");
 }
