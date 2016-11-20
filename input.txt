@@ -1,40 +1,4 @@
 <?php
-$a = 0;
-$b = 0;
-$c = array(11,2,3);
-$a = array();
-echo $c[0];
-unset($a, $b, $c[0]);
-foreach ($colors as $value) {
-    print $value."\n";
-}
-foreach (array(1,2,3) as $value) {
-    print $value."\n";
-}
-foreach ($a as $key => $value) {
-    print $key.' contains '.$value;
-
-}
-$a = ray();
-$a[0] = 'red';
-$a[1] = 'green';
-$a[2] = 'blue';
-function add($a, $b) {
-    return $a + $b;
-}
-add($a,2);
-
-try{
-        try {
-                throw new Exception("Hello");
-        } catch(Exception $e) {
-                echo $e->getMessage()." catch in\n";
-                throw $e;
-        } finally {
-                echo $e->getMessage()." finally \n";
-                throw new Exception("Bye");
-        }
-} catch (Exception $e) {
-        echo $e->getMessage()." catch out\n";
-}
+$c = array(array(1,2,3),array(4,5,6), array(7,8,9));
+$c[0][0] = 4;
 ?>

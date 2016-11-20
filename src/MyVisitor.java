@@ -397,6 +397,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitArrayCreationExpression(PHPParser.ArrayCreationExpressionContext ctx) {
+
         String items = (String) visitArrayItemList(ctx.arrayItemList());
         if( ctx.getText().contains("=>") ){
             return (T)("{" + items + "}");
@@ -563,9 +564,6 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         return (T) total;
     }
 
-
-
-
     @Override
     public T visitArrayItem(PHPParser.ArrayItemContext ctx) {
         if( ctx.getChildCount() > 1 ){
@@ -583,6 +581,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             if (id.equals("Exception"))
                 id = "Error";
         }
+        if( id.equals("array") ) id = "Array";
         return (T) id;
     }
 
@@ -654,13 +653,95 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         }else{
             String chn = (String) visitChain(chains.get(0));
             String exp = (String) visitExpression(ctx.expression());
-            return (T)( "var "+chn+" "+ctx.assignmentOperator().getText()+" "+exp);
+            if( !chn.contains("[") )
+                chn = "var "+chn;
+            return (T)( chn+" "+ctx.assignmentOperator().getText()+" "+exp);
         }
         return super.visitAssignmentExpression(ctx);
     }
 
     @Override
-    public T visitChain(PHPParser.ChainContext ctx) { return (T)( ctx.getText().replace("$","") ); }
+    public T visitChain(PHPParser.ChainContext ctx) {
+        String izq = "";
+        if( ctx.chainBase() != null ) {
+            izq = (String) visitChainBase(ctx.chainBase());
+        }else if( ctx.functionCall()!= null ){
+            izq = (String) visitFunctionCall(ctx.functionCall());
+        }else if( ctx.newExpr() != null ){
+            izq = "( " +((String) visitNewExpr(ctx.newExpr()))+" )";
+        }
+        String memberAcc = "";
+        for( PHPParser.MemberAccessContext ct: ctx.memberAccess() ){
+            memberAcc += (String)visitMemberAccess(ct);
+        }
+        return (T)( izq+memberAcc );
+    }
+
+    @Override
+    public T visitFunctionCall(PHPParser.FunctionCallContext ctx) {
+        String funcCallName = (String)visitFunctionCallName(ctx.functionCallName());
+        String actArgs = (String)visitActualArguments(ctx.actualArguments());
+        return (T)( funcCallName +""+actArgs );
+    }
+
+    @Override
+    public T visitFunctionCallName(PHPParser.FunctionCallNameContext ctx) {
+        if(ctx.qualifiedNamespaceName() != null)
+            return visitQualifiedNamespaceName(ctx.qualifiedNamespaceName());
+        else if( ctx.classConstant() != null )
+            return visitClassConstant(ctx.classConstant());
+        return visitChainBase(ctx.chainBase());
+    }
+
+
+
+    @Override
+    public T visitChainBase(PHPParser.ChainBaseContext ctx) {
+        if(ctx.qualifiedStaticTypeRef() != null){
+            //falta qualifiedStaticTypeRef
+        }else{
+            if( ctx.getChildCount() > 1 ){
+                //falta namespace
+            }
+            return visitKeyedVariable( ctx.keyedVariable(0) );
+        }
+        return super.visitChainBase(ctx);
+    }
+
+    @Override
+    public T visitKeyedVariable(PHPParser.KeyedVariableContext ctx) {
+        if( ctx.OpenCurlyBracket() != null ){
+            //falta doble pesos
+        }
+        if( ctx.Dollar().size() != 0 ){
+            //falta doble pesos
+        }
+        String squares = "";
+        if( ctx.squareCurlyExpression().size() != 0 ){
+            for(PHPParser.SquareCurlyExpressionContext ct: ctx.squareCurlyExpression() ){
+                squares += (String)visitSquareCurlyExpression(ct);
+            }
+        }
+
+        return (T) (ctx.VarName().getText().replace("$", "")+squares);
+    }
+
+    @Override
+    public T visitSquareCurlyExpression(PHPParser.SquareCurlyExpressionContext ctx) {
+        if( ctx.OpenCurlyBracket() != null ){
+            //falta doble pesos
+        }
+        String exp = "";
+        if( ctx.expression() != null ){
+            exp = (String)visitExpression(ctx.expression());
+        }
+        return (T)("[ "+exp+" ]");
+    }
+
+    @Override
+    public T visitChainExpression(PHPParser.ChainExpressionContext ctx) {
+        return super.visitChainExpression(ctx);
+    }
 
     @Override
     public T visitIndexerExpression(PHPParser.IndexerExpressionContext ctx) {
