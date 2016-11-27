@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -6,11 +7,16 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     private PrintWriter writer;
     private String tabulations;
+    private String functName;
 
-    public MyVisitor( String file ){
+    public MyVisitor( String f, String from){
         writer = null;
+        File file = new File(f);
+        functName = from;
         try{
             writer = new PrintWriter(file, "UTF-8");
+            writer.println("function "+from+"(response){");
+            writer.println("\tresponse.writeHead(200, {\"Content-Type\": \"text/html\"});");
         } catch (Exception e) {
             // do something
         }
@@ -18,6 +24,9 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     public void closeFile(){
+        writer.println("\tresponse.end()");
+        writer.println("}");
+        writer.println("\nexports."+functName+" = "+functName+";\n");
         writer.close();
     }
 

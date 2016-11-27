@@ -14,10 +14,8 @@ public class Interpreter {
     }
     public void filers( String from, String to ){
         File file = new File(from);
-
         File[] files = file.listFiles();
         for (int i = 0; i < files.length; i++) {
-            System.out.println(files[i].getName());
             if( files[i].isDirectory()){
                 File newFolder = new File(to+"\\"+files[i].getName());
                 boolean result = false;
@@ -38,7 +36,8 @@ public class Interpreter {
             }else if( files[i].isFile() && files[i].getName().contains(".php") ){
                 ArrayList<String> vals = new ArrayList<String>();
                 vals.add(from+"\\"+files[i].getName());
-                vals.add(to+"\\"+files[i].getName().replace(".php", ".js"));
+                vals.add(to+"\\"+files[i].getName().replace(".php", ".js").replace(" ","_"));
+                vals.add(files[i].getName().replace(".php", "").replace(" ","_"));
                 toVisit.add( vals );
             }else{
                 File actual = new File(from+"\\"+files[i].getName());
@@ -71,8 +70,51 @@ public class Interpreter {
 
     public static void main(String [] args) throws Exception{
         Interpreter inter = new Interpreter();
-        inter.filers(args[0], args[1]);
-        System.out.println(inter.toVisit);
+        inter.filers(args[0], args[1]+"");
+
+        File server = new File(args[1]+"\\NodeServer.js");
+        File router = new File(args[1]+"\\NodeRouter.js");
+        File request = new File(args[1]+"\\NodeRequestHandler.js");
+        File inx = new File(args[1]+"\\NodeIndex.js");
+
+        PrintWriter writer = new PrintWriter(server, "UTF-8");
+        writer.println("var http = require(\"http\");");
+        writer.println("var url = require(\"url\");");
+        writer.println("function iniciar(route, handle) {");
+        writer.println("\tfunction onRequest(request, response) {");
+        writer.println("\t\tvar pathname = url.parse(request.url).pathname;");
+        writer.println("\t\tconsole.log(\"Peticion para \" + pathname + \" recibida.\");");
+        writer.println("\t\trequest.setEncoding(\"utf8\");");
+        writer.println("\t\troute(handle, pathname, response );");
+        writer.println("\t}");
+        writer.println("\thttp.createServer(onRequest).listen(8888);");
+        writer.println("\tconsole.log(\"Servidor Iniciado\");");
+        writer.println("}");
+        writer.println("exports.iniciar = iniciar;");
+        writer.close();
+
+        writer = new PrintWriter( router, "UTF-8" );
+        writer.println("function route(handle, pathname, response) {");
+        writer.println("\tconsole.log(\"A punto de rutear una peticion para \" + pathname);");
+        writer.println("\tif (typeof handle[pathname] === 'function') {");
+        writer.println("\t\thandle[pathname](response);");
+        writer.println("\t} else {");
+        writer.println("\t\tconsole.log(\"No hay manipulador de peticion para \" + pathname);");
+        writer.println("\t\tresponse.writeHead(404, {\"Content-Type\": \"text/html\"});");
+        writer.println("\t\tresponse.write(\"404 No Encontrado\");");
+        writer.println("\t\tresponse.end();");
+        writer.println("\t}");
+        writer.println("}");
+        writer.println("exports.route = route;");
+        writer.close();
+
+        PrintWriter requestHandler = new PrintWriter(request, "UTF-8");
+        PrintWriter index = new PrintWriter(inx, "UTF-8");
+
+        index.println("var server = require(\"./NodeServer\");");
+        index.println("var router = require(\"./NodeRouter\");");
+        index.println("var requestHandlers = require(\"./NodeRequestHandler\");");
+        index.println("\nvar handle = {}");
 
         for( ArrayList file: inter.toVisit ){
             InputStream originalInput = System.in;
@@ -83,20 +125,21 @@ public class Interpreter {
             PHPParser parser = new PHPParser(tokens);
             ParseTree tree = parser.htmlDocument();
             System.setIn(originalInput);
-            MyVisitor<Object> loader = new MyVisitor<Object>((String) file.get(1));
+            MyVisitor<Object> loader = new MyVisitor<Object>((String) file.get(1), (String) file.get(2) );
             loader.visit(tree);
             loader.closeFile();
+            requestHandler.println("function "+ file.get(2)+"(response){");
+            System.out.println(((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/"));
+            requestHandler.println("\tvar resp = require(\"."+ ((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/") +"\");");
+            requestHandler.println("\tresp."+file.get(2)+"( response );");
+            requestHandler.println("}");
+            requestHandler.println("");
+            requestHandler.println("exports."+file.get(2)+" = "+file.get(2)+";\n");
+
+            index.println("handle[\"/"+((String) file.get(0)).replace((args[0])+"\\", "").replace(".php", "").replace("\\","/")+"\"] = requestHandlers."+file.get(2)+";");
         }
-        /*InputStream originalInput = System.in;
-        System.setIn(new FileInputStream(new File("input.txt")));
-        ANTLRInputStream input = new ANTLRInputStream(System.in);
-        PHPLexer lexer = new PHPLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        PHPParser parser = new PHPParser(tokens);
-        ParseTree tree = parser.htmlDocument();
-        System.setIn(originalInput);
-        MyVisitor<Object> loader = new MyVisitor<Object>("prueba.txt");
-        loader.visit(tree);
-        loader.closeFile();*/
+        index.println("server.iniciar(router.route, handle);");
+        index.close();
+        requestHandler.close();
     }
 }
