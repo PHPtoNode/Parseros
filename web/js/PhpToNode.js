@@ -3,11 +3,44 @@ var app = angular.module('PhpToNode', ['ngRoute']);
 
 app.controller('NavigationController', ['$scope', '$http', function ($scope, $http) {
 	$scope.progress = {"width":"0%"};
+	$scope.progressNum = 0;
+	$scope.finish = false;
 	$scope.isSended = false;
-	$scope.isError = false;
+	$scope.showConsole = false;
+	$scope.consoleServer = "";
+	$scope.getProgress = null;
+	$scope.targetPath = "";
+	$scope.sourcePath = "";
 
 	$scope.convert = function(){
-		console.log($scope.test);
+		$scope.isSended = true;
+		$http.post('Service', [$scope.sourcePath, $scope.targetPath])
+			.then(function (response) {
+				$scope.finish = true;
+				$scope.showConsole = true;
+				$scope.isSended = false;
+				$scope.consoleServer = response.data;
+				clearInterval($scope.getProgress);
+			});
+
+		$scope.getProgress = setInterval(function() {
+			$http.get('Service/getProgress')
+				.then(function (response) {
+					$scope.progress = {"width":""+ response.data +"%"};
+				});
+		}, 200);
+
+	};
+
+	$scope.closeWindow = function () {
+		$scope.progress = {"width":"0%"};
+		$scope.progressNum = 0;
+		$scope.finish = false;
+		$scope.isSended = false;
+		$scope.showConsole = false;
+		$scope.consoleServer = "";
+		$scope.targetPath = "";
+		$scope.sourcePath = "";
 	}
 }]);
 

@@ -1,12 +1,10 @@
-// Generated from PHPLexer.g4 by ANTLR 4.5.3
+package phptonode.ANTLR;// Generated from PHPLexer.g4 by ANTLR 4.5.3
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class PHPLexer extends Lexer {
@@ -328,7 +326,7 @@ public class PHPLexer extends Lexer {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "PHPLexer.g4"; }
+	public String getGrammarFileName() { return "phptonode/ANTLR/PHPLexer.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }

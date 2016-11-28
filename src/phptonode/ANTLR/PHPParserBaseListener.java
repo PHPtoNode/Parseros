@@ -1,4 +1,4 @@
-// Generated from PHPParser.g4 by ANTLR 4.5.3
+package phptonode.ANTLR;// Generated from PHPParser.g4 by ANTLR 4.5.3
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;

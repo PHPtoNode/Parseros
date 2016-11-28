@@ -1,13 +1,17 @@
+package phptonode;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import phptonode.ANTLR.PHPLexer;
+import phptonode.ANTLR.PHPParser;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Interpreter {
     public ArrayList<ArrayList<String>> toVisit;
+    public static Integer progress = 0;
 
     public Interpreter(){
         toVisit = new ArrayList<ArrayList<String>>();
@@ -17,7 +21,7 @@ public class Interpreter {
         File[] files = file.listFiles();
         for (int i = 0; i < files.length; i++) {
             if( files[i].isDirectory()){
-                File newFolder = new File(to+"\\"+files[i].getName());
+                File newFolder = new File(to+"/"+files[i].getName());
                 boolean result = false;
                 if( !newFolder.exists() ) {
                     try {
@@ -32,16 +36,16 @@ public class Interpreter {
                         System.exit(-1);
                     }
                 }
-                filers( from+"\\"+files[i].getName(), to+"\\"+files[i].getName() );
+                filers( from+"/"+files[i].getName(), to+"/"+files[i].getName() );
             }else if( files[i].isFile() && files[i].getName().contains(".php") ){
                 ArrayList<String> vals = new ArrayList<String>();
-                vals.add(from+"\\"+files[i].getName());
-                vals.add(to+"\\"+files[i].getName().replace(".php", ".js").replace(" ","_"));
+                vals.add(from+"/"+files[i].getName());
+                vals.add(to+"/"+files[i].getName().replace(".php", ".js").replace(" ","_"));
                 vals.add(files[i].getName().replace(".php", "").replace(" ","_"));
                 toVisit.add( vals );
             }else{
-                File actual = new File(from+"\\"+files[i].getName());
-                File copy = new File(to+"\\"+files[i].getName());
+                File actual = new File(from+"/"+files[i].getName());
+                File copy = new File(to+"/"+files[i].getName());
                 InputStream input = null;
                 OutputStream output = null;
                 try {
@@ -68,15 +72,16 @@ public class Interpreter {
         }
     }
 
-    public static void main(String [] args) throws Exception{
+    public static void generateConversion(String [] args) throws Exception{
+        progress = 10;
         Interpreter inter = new Interpreter();
         inter.filers(args[0], args[1]+"");
-
-        File server = new File(args[1]+"\\NodeServer.js");
-        File router = new File(args[1]+"\\NodeRouter.js");
-        File request = new File(args[1]+"\\NodeRequestHandler.js");
-        File inx = new File(args[1]+"\\NodeIndex.js");
-
+        progress = 18;
+        File server = new File(args[1]+"/NodeServer.js");
+        File router = new File(args[1]+"/NodeRouter.js");
+        File request = new File(args[1]+"/NodeRequestHandler.js");
+        File inx = new File(args[1]+"/NodeIndex.js");
+        progress = 25;
         PrintWriter writer = new PrintWriter(server, "UTF-8");
         writer.println("var http = require(\"http\");");
         writer.println("var url = require(\"url\");");
@@ -84,6 +89,7 @@ public class Interpreter {
         writer.println("\tfunction onRequest(request, response) {");
         writer.println("\t\tvar pathname = url.parse(request.url).pathname;");
         writer.println("\t\tconsole.log(\"Peticion para \" + pathname + \" recibida.\");");
+        progress = 30;
         writer.println("\t\trequest.setEncoding(\"utf8\");");
         writer.println("\t\troute(handle, pathname, request, response );");
         writer.println("\t}");
@@ -92,6 +98,7 @@ public class Interpreter {
         writer.println("}");
         writer.println("exports.iniciar = iniciar;");
         writer.close();
+        progress = 35;
 
         writer = new PrintWriter( router, "UTF-8" );
         writer.println("function route(handle, pathname, request, response) {");
@@ -99,6 +106,7 @@ public class Interpreter {
         writer.println("\tif (typeof handle[pathname] === 'function') {");
         writer.println("\t\thandle[pathname](request, response);");
         writer.println("\t} else {");
+        progress = 45;
         writer.println("\t\tconsole.log(\"No hay manipulador de peticion para \" + pathname);");
         writer.println("\t\tresponse.writeHead(404, {\"Content-Type\": \"text/html\"});");
         writer.println("\t\tresponse.write(\"404 No Encontrado\");");
@@ -107,7 +115,7 @@ public class Interpreter {
         writer.println("}");
         writer.println("exports.route = route;");
         writer.close();
-
+        progress = 50;
         PrintWriter requestHandler = new PrintWriter(request, "UTF-8");
         PrintWriter index = new PrintWriter(inx, "UTF-8");
 
@@ -115,7 +123,8 @@ public class Interpreter {
         index.println("var router = require(\"./NodeRouter\");");
         index.println("var requestHandlers = require(\"./NodeRequestHandler\");");
         index.println("\nvar handle = {}");
-
+        progress = 60;
+        int temp = 40/inter.toVisit.size();
         for( ArrayList file: inter.toVisit ){
             InputStream originalInput = System.in;
             System.setIn(new FileInputStream(new File( (String) file.get(0) )));
@@ -129,16 +138,18 @@ public class Interpreter {
             loader.visit(tree);
             loader.closeFile();
             requestHandler.println("function "+ file.get(2)+"(request, response){");
-            System.out.println(((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/"));
-            requestHandler.println("\tvar resp = require(\"."+ ((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/") +"\");");
+            System.out.println(((String) file.get(1)).replace(args[1],"").replace(".js","").replace("/","/"));
+            requestHandler.println("\tvar resp = require(\"."+ ((String) file.get(1)).replace(args[1],"").replace(".js","").replace("/","/") +"\");");
             requestHandler.println("\tresp."+file.get(2)+"( response );");
             requestHandler.println("}");
             requestHandler.println("");
             requestHandler.println("exports."+file.get(2)+" = "+file.get(2)+";\n");
 
-            index.println("handle[\"/"+((String) file.get(0)).replace((args[0])+"\\", "").replace(".php", "").replace("\\","/")+"\"] = requestHandlers."+file.get(2)+";");
+            index.println("handle[\"/"+((String) file.get(0)).replace((args[0])+"/", "").replace(".php", "").replace("/","/")+"\"] = requestHandlers."+file.get(2)+";");
+            progress += temp;
         }
         index.println("server.iniciar(router.route, handle);");
+        progress = 100;
         index.close();
         requestHandler.close();
     }
