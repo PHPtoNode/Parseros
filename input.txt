@@ -1,34 +1,17 @@
 <?php
-$graph = array(
-            array(0, 1, 1, 0, 0, 0),
-            array(1, 0, 0, 1, 0, 0),
-            array(1, 0, 0, 1, 1, 1),
-            array(0, 1, 1, 0, 1, 0),
-            array(0, 0, 1, 1, 0, 1),
-            array(0, 0, 1, 0, 1, 0),
-         );
-         
-function init($visited, $graph){
-    foreach ($graph as $key => $vertex) {
-        $visited[$key] = 0;
+isset($i);
+
+class Format {
+    public $abc = "2";
+    function Format($s) {
+        $this->source = $s;
     }
-}
-function breadthFirst($graph, $start, $visited){
-    $visited = array();
-    $queue = array();
-    init($visited, $graph);
-    array_push($queue, $start);
-    $visited[$start] = 1;
-    while (count($queue)) {
-        $t = array_shift($queue);
-        foreach ($graph[$t] as $key => $vertex) {
-            if (!$visited[$key] && $vertex == 1) {
-                $visited[$key] = 1;
-                array_push($queue, $key);
-            }
+    function apply($a) {
+        $ret = $this->source;
+        for ($i=1; $i <= count($a); ++$i) {
+            $ret = str_replace('{'.$i.'}', $a[$i-1], $ret);
         }
+        return $ret;
     }
-    print_r($visited);
 }
-breadthFirst($graph, 2);
 ?>

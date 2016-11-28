@@ -20,7 +20,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         functName = from;
         try{
             writer = new PrintWriter(file, "UTF-8");
-            writer.println("function "+from+"(response){");
+            writer.println("function "+from+"(request, response, GET){");
             writer.println("\tresponse.writeHead(200, {\"Content-Type\": \"text/html\"});");
         } catch (Exception e) {
             // do something
@@ -47,14 +47,23 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitHtmlElement(PHPParser.HtmlElementContext ctx) {
-        writer.println("response.write(\""+ctx.getText()+"\"+\"\");");
+        String th = "response.write(\""+ctx.getText().replace(".php", "")+"\"+\"\");";
+        if( th.equals("response.write(\"\"\"+\"\");") ) th = "response.write(\"\\\"\"+\"\");";
+        if(ctx.getText().equals(">")){
+            th = "response.write(\">\\n\"+\"\");";
+        }else if( ctx.getText().equals("/>") ){
+            th = "response.write(\" />\");";
+        }else if( ctx.getText().equals("rel") || ctx.getText().equals("href") || ctx.getText().equals("src") || ctx.getText().equals("type") || ctx.getText().equals("class") || ctx.getText().equals("name") || ctx.getText().equals("id") || ctx.getText().equals("action") || ctx.getText().equals("method") || ctx.getText().equals("value") || ctx.getText().equals("for")){
+            th = "response.write(\" "+ctx.getText()+"\"+\"\");";
+        }
+        writer.println(th);
         return (T)("");
     }
 
     @Override
     public T visitTopStatement(PHPParser.TopStatementContext ctx) {
         String val = (String) super.visitTopStatement(ctx);
-        writer.println(val+"");
+        writer.println(val+" ");
         return null;
     }
 
@@ -753,6 +762,8 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         return visitChainBase(ctx.chainBase());
     }
 
+
+
     @Override
     public T visitChainBase(PHPParser.ChainBaseContext ctx) {
         if(ctx.qualifiedStaticTypeRef() != null){
@@ -781,7 +792,13 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             }
         }
 
-        return (T) (ctx.VarName().getText().replace("$", "")+squares);
+        String name="";
+        if( ctx.VarName().getText().equals("$_GET") ){
+            name = "GET";
+        }else{
+            name = ctx.getText().replace("$", "");
+        }
+        return (T) (name+squares);
     }
 
     @Override
@@ -805,6 +822,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     public T visitUnaryOperatorExpression(PHPParser.UnaryOperatorExpressionContext ctx) {
         return (T)(ctx.getText().substring(0,1) + (String) visitExpression(ctx.expression()));
     }
+
 
     @Override
     public T visitIndexerExpression(PHPParser.IndexerExpressionContext ctx) {
