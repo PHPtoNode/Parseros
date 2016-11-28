@@ -41,6 +41,17 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitHtmlElementOrPhpBlock(PHPParser.HtmlElementOrPhpBlockContext ctx) {
+        return super.visitHtmlElementOrPhpBlock(ctx);
+    }
+
+    @Override
+    public T visitHtmlElement(PHPParser.HtmlElementContext ctx) {
+        writer.println("response.write(\""+ctx.getText()+"\"+\"\");");
+        return (T)("");
+    }
+
+    @Override
     public T visitTopStatement(PHPParser.TopStatementContext ctx) {
         String val = (String) super.visitTopStatement(ctx);
         writer.println(val+"");
@@ -342,7 +353,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         ArrayList<String> values = (ArrayList<String>) visitExpressionList(ctx.expressionList());
         String total = "";
         for(String str : values) {
-            total += "response.write(" + str + ");";
+            total += "response.write(" + str + "+\"\");";
             if( values.size() > 1 ) total += "\n";
         }
         return (T)total;
@@ -602,11 +613,13 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     @Override
     public T visitIdentifier(PHPParser.IdentifierContext ctx) {;
         String id = ctx.getText();
+
         if( id != null ) {
             if (id.equals("Exception"))
                 id = "Error";
         }
         if( id.equals("array") ) id = "Array";
+
         return (T) id;
     }
 
@@ -705,9 +718,30 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitFunctionCall(PHPParser.FunctionCallContext ctx) {
+        String total = "";
         String funcCallName = (String)visitFunctionCallName(ctx.functionCallName());
         String actArgs = (String)visitActualArguments(ctx.actualArguments());
-        return (T)( funcCallName +""+actArgs );
+        if( funcCallName.equals("isset") ){
+            total = "(typeof "+actArgs+" !== 'undefined')";
+        }else if( funcCallName.equals("count") ){
+            total = actArgs.replace("(","").replace(")", "")+".length";
+        }else if( funcCallName.equals("str_replace") ) {
+            String[] args = actArgs.replace("(", "").replace(")", "").split(",");
+            total = args[2] + ".replace(" + args[0] + "," + args[1] + ")";
+        }else if( funcCallName.equals("array_push") ) {
+            String[] args = actArgs.replace("(", "").replace(")", "").replace(" ", "").split(",");
+            total += args[0] + "." + "push(" + args[1] + ")";
+        }else if( funcCallName.equals("array_shift") ){
+            total += actArgs.replace("(", "").replace(")", "").replace(" ", "");
+            total += "[0];";
+            total += actArgs.replace("(", "").replace(")", "").replace(" ", "");
+            total += ".splice(0,1)";
+        }else if( funcCallName.equals("print_r") ){
+            total += "console.log"+actArgs;
+        }else{
+            total = funcCallName +""+actArgs;
+        }
+        return (T)( total );
     }
 
     @Override
@@ -768,6 +802,11 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitUnaryOperatorExpression(PHPParser.UnaryOperatorExpressionContext ctx) {
+        return (T)(ctx.getText().substring(0,1) + (String) visitExpression(ctx.expression()));
+    }
+
+    @Override
     public T visitIndexerExpression(PHPParser.IndexerExpressionContext ctx) {
         String name = (String) visitStringConstant(ctx.stringConstant());
         String exp = (String) visitExpression(ctx.expression());
@@ -822,7 +861,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
                                     methods += (String) visitFormalParameterList(ct.formalParameterList());
                                     methods += ")";
                                     if (ct.methodBody() != null) {
-                                        methods += (String) visit(ct.methodBody());
+                                        methods += (String) visit(ct.methodBody())+";\n";
                                     }
                                 }else{
 

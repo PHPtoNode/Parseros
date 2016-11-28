@@ -48,7 +48,7 @@ public class PathService {
         a = new Interpreter();
         String[] args = {paths.get(0), paths.get(1)};
         a.progress = 5;
-        a.generateConversion(args);
+        //a.generateConversion(args);
         for( String i: paths)
             System.out.printf(i);
 

@@ -72,7 +72,7 @@ public class Interpreter {
         }
     }
 
-    public static void generateConversion(String [] args) throws Exception{
+    public static void main(String [] args) throws Exception{
         progress = 10;
         Interpreter inter = new Interpreter();
         inter.filers(args[0], args[1]+"");
@@ -81,6 +81,7 @@ public class Interpreter {
         File router = new File(args[1]+"/NodeRouter.js");
         File request = new File(args[1]+"/NodeRequestHandler.js");
         File inx = new File(args[1]+"/NodeIndex.js");
+
         progress = 25;
         PrintWriter writer = new PrintWriter(server, "UTF-8");
         writer.println("var http = require(\"http\");");
@@ -118,11 +119,11 @@ public class Interpreter {
         progress = 50;
         PrintWriter requestHandler = new PrintWriter(request, "UTF-8");
         PrintWriter index = new PrintWriter(inx, "UTF-8");
-
         index.println("var server = require(\"./NodeServer\");");
         index.println("var router = require(\"./NodeRouter\");");
         index.println("var requestHandlers = require(\"./NodeRequestHandler\");");
         index.println("\nvar handle = {}");
+
         progress = 60;
         int temp = 40/inter.toVisit.size();
         for( ArrayList file: inter.toVisit ){
