@@ -42,14 +42,23 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitHtmlElement(PHPParser.HtmlElementContext ctx) {
-        writer.println("response.write(\""+ctx.getText()+"\"+\"\");");
+        String th = "response.write(\""+ctx.getText().replace(".php", "")+"\"+\"\");";
+        if( th.equals("response.write(\"\"\"+\"\");") ) th = "response.write(\"\\\"\"+\"\");";
+        if(ctx.getText().equals(">")){
+            th = "response.write(\">\\n\"+\"\");";
+        }else if( ctx.getText().equals("/>") ){
+            th = "response.write(\" />\");";
+        }else if( ctx.getText().equals("rel") || ctx.getText().equals("href") || ctx.getText().equals("src") || ctx.getText().equals("type") || ctx.getText().equals("class") || ctx.getText().equals("name") || ctx.getText().equals("id") || ctx.getText().equals("action") || ctx.getText().equals("method") || ctx.getText().equals("value") || ctx.getText().equals("for")){
+            th = "response.write(\" "+ctx.getText()+"\"+\"\");";
+        }
+        writer.println(th);
         return (T)("");
     }
 
     @Override
     public T visitTopStatement(PHPParser.TopStatementContext ctx) {
         String val = (String) super.visitTopStatement(ctx);
-        writer.println(val+"");
+        writer.println(val+" ");
         return null;
     }
 
@@ -722,7 +731,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             String[] args = actArgs.replace("(","").replace(")","").split(",");
             total = args[2]+".replace("+args[0]+","+args[1]+")";
         }else{
-            total = funcCallName +""+actArgs;
+            total = funcCallName +" "+actArgs;
         }
         return (T)( total );
     }
