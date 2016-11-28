@@ -15,7 +15,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         functName = from;
         try{
             writer = new PrintWriter(file, "UTF-8");
-            writer.println("function "+from+"(response){");
+            writer.println("function "+from+"(request, response, GET){");
             writer.println("\tresponse.writeHead(200, {\"Content-Type\": \"text/html\"});");
         } catch (Exception e) {
             // do something
@@ -764,7 +764,13 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             }
         }
 
-        return (T) (ctx.VarName().getText().replace("$", "")+squares);
+        String name="";
+        if( ctx.VarName().getText().equals("$_GET") ){
+            name = "GET";
+        }else{
+            name = ctx.getText().replace("$", "");
+        }
+        return (T) (name+squares);
     }
 
     @Override

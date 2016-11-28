@@ -81,11 +81,20 @@ public class Interpreter {
         writer.println("var http = require(\"http\");");
         writer.println("var url = require(\"url\");");
         writer.println("function iniciar(route, handle) {");
+        writer.println("\tvar GET = {};");
         writer.println("\tfunction onRequest(request, response) {");
+        writer.println("\t\tvar urlparts= request.url.split('?');");
+        writer.println("\t\tif( urlparts.length >= 2 ){");
+        writer.println("\t\t\tvar query = urlparts[urlparts.length-1].split('&');");
+        writer.println("\t\t\tfor( var p = 0; p < query.length; ++p ){");
+        writer.println("\t\t\t\tvar pair = query[p].split('=');");
+        writer.println("\t\t\t\tGET[pair[0]] = pair[1];");
+        writer.println("\t\t\t}");
+        writer.println("\t\t}");
         writer.println("\t\tvar pathname = url.parse(request.url).pathname;");
         writer.println("\t\tconsole.log(\"Peticion para \" + pathname + \" recibida.\");");
         writer.println("\t\trequest.setEncoding(\"utf8\");");
-        writer.println("\t\troute(handle, pathname, request, response );");
+        writer.println("\t\troute(handle, pathname, request, response, GET );");
         writer.println("\t}");
         writer.println("\thttp.createServer(onRequest).listen(8888);");
         writer.println("\tconsole.log(\"Servidor Iniciado\");");
@@ -94,10 +103,10 @@ public class Interpreter {
         writer.close();
 
         writer = new PrintWriter( router, "UTF-8" );
-        writer.println("function route(handle, pathname, request, response) {");
+        writer.println("function route(handle, pathname, request, response, GET) {");
         writer.println("\tconsole.log(\"A punto de rutear una peticion para \" + pathname);");
         writer.println("\tif (typeof handle[pathname] === 'function') {");
-        writer.println("\t\thandle[pathname](request, response);");
+        writer.println("\t\thandle[pathname](request, response, GET);");
         writer.println("\t} else {");
         writer.println("\t\tconsole.log(\"No hay manipulador de peticion para \" + pathname);");
         writer.println("\t\tresponse.writeHead(404, {\"Content-Type\": \"text/html\"});");
@@ -128,9 +137,9 @@ public class Interpreter {
             MyVisitor<Object> loader = new MyVisitor<Object>((String) file.get(1), (String) file.get(2) );
             loader.visit(tree);
             loader.closeFile();
-            requestHandler.println("function "+ file.get(2)+"(request, response){");
+            requestHandler.println("function "+ file.get(2)+"(request, response, GET){");
             requestHandler.println("\tvar resp = require(\"."+ ((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/") +"\");");
-            requestHandler.println("\tresp."+file.get(2)+"( response );");
+            requestHandler.println("\tresp."+file.get(2)+"( request, response, GET );");
             requestHandler.println("}");
             requestHandler.println("");
             requestHandler.println("exports."+file.get(2)+" = "+file.get(2)+";\n");
