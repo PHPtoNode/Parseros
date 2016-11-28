@@ -36,6 +36,17 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
+    public T visitHtmlElementOrPhpBlock(PHPParser.HtmlElementOrPhpBlockContext ctx) {
+        return super.visitHtmlElementOrPhpBlock(ctx);
+    }
+
+    @Override
+    public T visitHtmlElement(PHPParser.HtmlElementContext ctx) {
+        writer.println("response.write(\""+ctx.getText()+"\"+\"\");");
+        return (T)("");
+    }
+
+    @Override
     public T visitTopStatement(PHPParser.TopStatementContext ctx) {
         String val = (String) super.visitTopStatement(ctx);
         writer.println(val+"");
@@ -65,6 +76,16 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     @Override
     public T visitNonEmptyStatement(PHPParser.NonEmptyStatementContext ctx) {
         return super.visitNonEmptyStatement(ctx);
+    }
+
+    @Override
+    public T visitMemberAccess(PHPParser.MemberAccessContext ctx) {
+        String total = ".";
+        if( ctx.keyedFieldName() != null )
+            total += (String) visit(ctx.keyedFieldName());
+        if( ctx.actualArguments() != null )
+            total += (String) visitActualArguments(ctx.actualArguments());
+        return (T) total;
     }
 
     @Override
@@ -327,7 +348,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         ArrayList<String> values = (ArrayList<String>) visitExpressionList(ctx.expressionList());
         String total = "";
         for(String str : values) {
-            total += "response.write(" + str + ");";
+            total += "response.write(" + str + "+\"\");";
             if( values.size() > 1 ) total += "\n";
         }
         return (T)total;
@@ -549,7 +570,8 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         for( PHPParser.ActualArgumentContext ct: ctx.actualArgument() ){
             total += visitActualArgument(ct) + ", ";
         }
-        total = total.substring(0, total.length() - 2);
+        if( total.length() > 2 )
+            total = total.substring(0, total.length() - 2);
         total += ")";
         return (T) total;
     }
@@ -584,7 +606,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     }
 
     @Override
-    public T visitIdentifier(PHPParser.IdentifierContext ctx) {
+    public T visitIdentifier(PHPParser.IdentifierContext ctx) {;
         String id = ctx.getText();
         if( id != null ) {
             if (id.equals("Exception"))
@@ -656,13 +678,14 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitAssignmentExpression(PHPParser.AssignmentExpressionContext ctx) {
+
         List<PHPParser.ChainContext> chains = (List<PHPParser.ChainContext>) ctx.chain();
         if( chains.size() != 1 ){
 
         }else{
             String chn = (String) visitChain(chains.get(0));
             String exp = (String) visitExpression(ctx.expression());
-            if( !chn.contains("[") )
+            if( !chn.contains("[") && !chn.contains("this"))
                 chn = "var "+chn;
             return (T)( chn+" "+ctx.assignmentOperator().getText()+" "+exp);
         }
@@ -688,9 +711,20 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
 
     @Override
     public T visitFunctionCall(PHPParser.FunctionCallContext ctx) {
+        String total = "";
         String funcCallName = (String)visitFunctionCallName(ctx.functionCallName());
         String actArgs = (String)visitActualArguments(ctx.actualArguments());
-        return (T)( funcCallName +""+actArgs );
+        if( funcCallName.equals("isset") ){
+            total = "(typeof "+actArgs+" !== 'undefined')";
+        }else if( funcCallName.equals("count") ){
+            total = actArgs.replace("(","").replace(")", "")+".length";
+        }else if( funcCallName.equals("str_replace") ){
+            String[] args = actArgs.replace("(","").replace(")","").split(",");
+            total = args[2]+".replace("+args[0]+","+args[1]+")";
+        }else{
+            total = funcCallName +""+actArgs;
+        }
+        return (T)( total );
     }
 
     @Override
@@ -701,8 +735,6 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             return visitClassConstant(ctx.classConstant());
         return visitChainBase(ctx.chainBase());
     }
-
-
 
     @Override
     public T visitChainBase(PHPParser.ChainBaseContext ctx) {
@@ -752,6 +784,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         return super.visitChainExpression(ctx);
     }
 
+
     @Override
     public T visitIndexerExpression(PHPParser.IndexerExpressionContext ctx) {
         String name = (String) visitStringConstant(ctx.stringConstant());
@@ -775,6 +808,65 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
     public T visitPrintExpression(PHPParser.PrintExpressionContext ctx) {
         String value = (String) visitExpression(ctx.expression());
         return (T)("console.log(" + value + ")");
+    }
+
+    @Override
+    public T visitClassDeclaration(PHPParser.ClassDeclarationContext ctx) {
+        String head = "", methods = "";
+        boolean constructor = false;
+        if( ctx.Interface() != null ){
+            //Todo: Interface
+        }
+
+        if( ctx.classEntryType() != null ) {
+            if( ctx.classEntryType().Class() != null ) {
+                head += "function " + ctx.identifier().getText();
+                if( ctx.OpenCurlyBracket() != null ) {
+                    if (ctx.classStatement() != null) {
+                        for (PHPParser.ClassStatementContext ct : ctx.classStatement())
+                            if( isConstructor(ct, ctx.identifier().getText())){
+                                constructor = true;
+                                head += "(";
+                                head += (String) visitFormalParameterList(ct.formalParameterList());
+                                head += ")";
+                                if( ct.methodBody() != null ){
+                                    head += (String) visit(ct.methodBody());
+                                }
+                            }else{
+                                if( ct.Function() != null ) {
+                                    methods += ctx.identifier().getText() + "." + "prototype" + ".";
+                                    methods += (String) visitIdentifier(ct.identifier());
+                                    methods += " = function(";
+                                    methods += (String) visitFormalParameterList(ct.formalParameterList());
+                                    methods += ")";
+                                    if (ct.methodBody() != null) {
+                                        methods += (String) visit(ct.methodBody())+";\n";
+                                    }
+                                }else{
+
+                                }
+                            }
+                        //total += (String) visitClassStatement(ct, ctx.identifier().getText()) ;
+                    }
+                }
+                if( !constructor )
+                    head += "()";
+            }else if ( ctx.classEntryType().Trait() != null ) {
+                //ToDo: Trait
+            }
+        }
+
+        return (T) (head + "\n" + methods);
+    }
+
+    public boolean isConstructor(PHPParser.ClassStatementContext ctx, String constructor) {
+        if( ctx.Function() != null ){
+            if( ctx.identifier() != null ){
+                String temp = (String) visitIdentifier(ctx.identifier());
+                return temp.equals(constructor);
+            }
+        }
+        return false;
     }
 
     @Override

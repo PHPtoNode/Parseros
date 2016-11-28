@@ -129,7 +129,6 @@ public class Interpreter {
             loader.visit(tree);
             loader.closeFile();
             requestHandler.println("function "+ file.get(2)+"(request, response){");
-            System.out.println(((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/"));
             requestHandler.println("\tvar resp = require(\"."+ ((String) file.get(1)).replace(args[1],"").replace(".js","").replace("\\","/") +"\");");
             requestHandler.println("\tresp."+file.get(2)+"( response );");
             requestHandler.println("}");

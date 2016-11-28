@@ -1,19 +1,17 @@
 <?php
-$c = array(array(1,2,3),array(4,5,6), array(7,8,9));
-$v = 0;
-unset($c[0][0]);
-unset($v);
-$c[0][0] = 4;
-lab2:
-kasndf
-    goto lab2;
+isset($i);
 
-lab:
-    label1;
-    for( ){
-        continue label1;
-        while(){
-            break lab;
-        }
+class Format {
+    public $abc = "2";
+    function Format($s) {
+        $this->source = $s;
     }
+    function apply($a) {
+        $ret = $this->source;
+        for ($i=1; $i <= count($a); ++$i) {
+            $ret = str_replace('{'.$i.'}', $a[$i-1], $ret);
+        }
+        return $ret;
+    }
+}
 ?>
