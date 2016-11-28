@@ -101,7 +101,7 @@ public class Interpreter {
         writer.println("\t\t\t\tresponse.write(data);");
         writer.println("\t\t\t\tresponse.end();");
         writer.println("\t\t\t});");
-        
+
         writer.println("\t\t}else if(request.url.indexOf('.html') != -1){");
         writer.println("\t\t\tvar pathname = __dirname+url.parse(request.url).pathname.replace(\"/\",\"\\\\\");");
         writer.println("\t\t\tfs.readFile(pathname, function (err, data) {");

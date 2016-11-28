@@ -777,7 +777,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
         if( ctx.VarName().getText().equals("$_GET") ){
             name = "GET";
         }else{
-            name = ctx.getText().replace("$", "");
+            name = ctx.VarName().getText().replace("$", "");
         }
         return (T) (name+squares);
     }
