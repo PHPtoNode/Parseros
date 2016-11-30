@@ -10,11 +10,11 @@ import phptonode.ANTLR.PHPParser;
 import java.io.*;
 import java.util.ArrayList;
 
-public class Interpreter {
+public class RunInConsole {
     public ArrayList<ArrayList<String>> toVisit;
     public static Integer progress = 0;
 
-    public Interpreter(){
+    public RunInConsole(){
         toVisit = new ArrayList<ArrayList<String>>();
     }
     public void filers( String from, String to ){
@@ -73,9 +73,9 @@ public class Interpreter {
         }
     }
 
-    public static void generateConversion(String [] args) throws Exception{
+    public static void main(String [] args) throws Exception{
         progress = 10;
-        Interpreter inter = new Interpreter();
+        RunInConsole inter = new RunInConsole();
         inter.filers(args[0], args[1]+"");
         progress = 18;
         File server = new File(args[1]+"/NodeServer.js");

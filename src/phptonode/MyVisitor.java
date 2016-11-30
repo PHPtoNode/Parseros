@@ -797,6 +797,7 @@ public class MyVisitor<T> extends PHPParserBaseVisitor<T> {
             name = "GET";
         }else{
             name = ctx.getText().replace("$", "");
+            name = ctx.VarName().getText().replace("$", "");
         }
         return (T) (name+squares);
     }
