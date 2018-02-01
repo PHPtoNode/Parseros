@@ -262,7 +262,7 @@ switchStatement
     ;
 
 switchBlock
-    : ((Case expression | Default) ( ':' | ';' ))+ innerStatementList
+    : ((Case expression | Default ) ( ':' | ';' ))+ innerStatementList
     ;
     
 breakStatement
@@ -721,7 +721,7 @@ identifier
     | Const
     | Continue
     | Declare
-    | Default
+    //| Default
     | Do
     | DoubleCast
     | DoubleType
@@ -786,7 +786,7 @@ identifier
     | Typeof
     | UintCast
     | UnicodeCast
-    | Unset
+    //| Unset
     | Use
     | Var
     | While
@@ -885,4 +885,4 @@ castOperation
     | ObjectType
     | Resource
     | Unset
-    ;
+;

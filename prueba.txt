@@ -1,0 +1,10 @@
+function Format(s){
+	this.source = s;
+}
+Format.prototype.apply = function(a){
+	var ret = this.source;
+	for(var i = 1; i <= count(a); ++i){
+		var ret = str_replace('{' + i + '}', a[ i - 1 ], ret);
+	}
+	return ret;
+}
